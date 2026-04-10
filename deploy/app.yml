@@ -1,0 +1,108 @@
+## =============================================================================
+## Tari Community Discourse — container definition
+## =============================================================================
+## This file is consumed by the `discourse_docker` launcher at
+## /var/discourse/containers/app.yml. It is generated from this template by
+## deploy/install.sh which substitutes values from .env.
+##
+## Do NOT edit the generated /var/discourse/containers/app.yml directly —
+## changes will be clobbered on the next `install.sh` run. Edit THIS file,
+## commit, pull on the host, and run `./launcher rebuild app`.
+## =============================================================================
+
+templates:
+  - "templates/postgres.template.yml"
+  - "templates/redis.template.yml"
+  - "templates/web.template.yml"
+  - "templates/web.ratelimited.template.yml"
+  ## Let's Encrypt — issues and auto-renews the TLS cert.
+  - "templates/web.ssl.template.yml"
+  - "templates/web.letsencrypt.ssl.template.yml"
+
+## Expose 80/443 to the host. The firewall rules set by install.sh restrict
+## inbound to these two ports + SSH only.
+expose:
+  - "80:80"
+  - "443:443"
+
+params:
+  db_default_text_search_config: "pg_catalog.english"
+  ## Tuned for a 4 vCPU / 16 GB host. Override in .env via DB_SHARED_BUFFERS.
+  db_shared_buffers: "${DB_SHARED_BUFFERS}"
+  ## Unicorn worker count. Rule of thumb: 2 * vCPU, capped at ~8 on 16 GB.
+  UNICORN_WORKERS: ${UNICORN_WORKERS}
+
+env:
+  LANG: en_US.UTF-8
+  LC_ALL: en_US.UTF-8
+  ## Keep container size manageable.
+  LANGUAGE: en_US.UTF-8
+  DISCOURSE_DEFAULT_LOCALE: en
+
+  ## --- Hostname & URLs ------------------------------------------------------
+  DISCOURSE_HOSTNAME: "${FORUM_DOMAIN}"
+  DISCOURSE_DEVELOPER_EMAILS: "${ADMIN_EMAIL}"
+
+  ## --- SMTP — Discourse will not start without this ------------------------
+  DISCOURSE_SMTP_ADDRESS: "${SMTP_ADDRESS}"
+  DISCOURSE_SMTP_PORT: ${SMTP_PORT}
+  DISCOURSE_SMTP_USER_NAME: "${SMTP_USER_NAME}"
+  DISCOURSE_SMTP_PASSWORD: "${SMTP_PASSWORD}"
+  DISCOURSE_SMTP_DOMAIN: "${SMTP_DOMAIN}"
+  DISCOURSE_NOTIFICATION_EMAIL: "${NOTIFICATION_EMAIL}"
+  DISCOURSE_SMTP_ENABLE_START_TLS: true
+
+  ## --- Let's Encrypt --------------------------------------------------------
+  LETSENCRYPT_ACCOUNT_EMAIL: "${LETSENCRYPT_ACCOUNT_EMAIL}"
+
+  ## --- Sensible defaults for a community forum -----------------------------
+  DISCOURSE_ENABLE_CORS: "true"
+  DISCOURSE_SERVE_STATIC_ASSETS: "true"
+
+volumes:
+  - volume:
+      host: /var/discourse/shared/standalone
+      guest: /shared
+  - volume:
+      host: /var/discourse/shared/standalone/log/var-log
+      guest: /var/log
+
+## =============================================================================
+## Plugins
+## -----------------------------------------------------------------------------
+## Keep this list conservative. Every plugin added is an upgrade-risk surface.
+## =============================================================================
+hooks:
+  after_code:
+    - exec:
+        cd: $home/plugins
+        cmd:
+          - git clone --depth 1 https://github.com/discourse/docker_manager.git
+          ## GitHub SSO login button — only active once GITHUB_CLIENT_ID is set.
+          - git clone --depth 1 https://github.com/discourse/discourse-github-oauth2.git || true
+
+  ## Run category seeder on first boot only. Idempotent — safe to re-run.
+  after_bundle_exec:
+    - exec:
+        cd: $home
+        cmd:
+          - mkdir -p /shared/tari-seed
+          - |
+            if [ ! -f /shared/tari-seed/.seeded ]; then
+              echo "[tari] Seeding categories..."
+              su discourse -c 'cd $home && bundle exec rails runner /shared/tari-seed/seed-categories.rb' || true
+              touch /shared/tari-seed/.seeded
+            else
+              echo "[tari] Categories already seeded — skipping."
+            fi
+
+## =============================================================================
+## Runtime commands — executed each time the container boots
+## =============================================================================
+run:
+  - exec: echo "Beginning of custom commands"
+  ## Make sure crontab inside the container runs the nightly backup.
+  - exec: rails r "SiteSetting.automatic_backups_enabled = true"
+  - exec: rails r "SiteSetting.backup_frequency = 1"
+  - exec: rails r "SiteSetting.maximum_backups = ${BACKUP_RETENTION_DAYS}"
+  - exec: echo "End of custom commands"
