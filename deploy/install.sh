@@ -40,8 +40,10 @@ require_env() {
   if [[ ! -f "${ENV_FILE}" ]]; then
     die ".env not found at ${ENV_FILE}. Copy .env.example and fill it in." 2
   fi
-  # shellcheck disable=SC1090
-  set -a; source "${ENV_FILE}"; set +a
+  set -a
+  # shellcheck source=/dev/null
+  source "${ENV_FILE}"
+  set +a
 
   local missing=()
   for var in FORUM_DOMAIN ADMIN_EMAIL SMTP_ADDRESS SMTP_USER_NAME SMTP_PASSWORD \

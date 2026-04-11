@@ -23,8 +23,10 @@ log() { printf '[%s] %s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$*"; }
 # Load env (written by install.sh — a filtered copy of repo .env with only
 # non-secret operational vars).
 if [[ -f "${ENV_FILE}" ]]; then
-  # shellcheck disable=SC1090
-  set -a; source "${ENV_FILE}"; set +a
+  set -a
+  # shellcheck source=/dev/null
+  source "${ENV_FILE}"
+  set +a
 fi
 BACKUP_RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-14}"
 

@@ -131,5 +131,12 @@ Then follow "Restore — production" above.
 **Critical:** the restore host must have the same `DISCOURSE_HOSTNAME` as
 the backup was taken on, otherwise avatars and upload URLs break. If you
 need to change the hostname during a disaster recovery, use the official
-[remap rake task](https://meta.discourse.org/t/rename-a-discourse-instance/24908)
-after the restore completes.
+Discourse remap rake task after the restore completes:
+
+```bash
+sudo /var/discourse/launcher enter app
+rake "posts:remap[old.example.com,new.example.com]"
+rake uploads:regenerate_missing_optimized
+```
+
+Run this against a backup first, never blindly against production.

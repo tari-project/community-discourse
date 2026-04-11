@@ -34,16 +34,16 @@ retention:
 
 paths:
   local_backup_dir: /var/discourse/shared/standalone/backups/default
-  restore_workdir:  /var/discourse/shared/standalone/restore-test
+  restore_workdir: /var/discourse/shared/standalone/restore-test
 
 offsite:
   enabled_if_env: S3_BACKUP_BUCKET
-  bucket:         "${S3_BACKUP_BUCKET}"
-  region:         "${S3_REGION}"
-  prefix:         "discourse/nightly/"
+  bucket: "${S3_BACKUP_BUCKET}"
+  region: "${S3_REGION}"
+  prefix: "discourse/nightly/"
 
 drill:
   # Automated restore test runs once a week via cron (Sunday 04:30 UTC).
   # See docs/BACKUP_RESTORE.md for the manual procedure.
-  cron:   "30 4 * * 0"
+  cron: "30 4 * * 0"
   script: /usr/local/sbin/tari-restore-test.sh

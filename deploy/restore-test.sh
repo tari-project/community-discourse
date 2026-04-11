@@ -97,7 +97,7 @@ fi
 # 4. Smoke test: /srv/status should 200 on the internal port
 # -----------------------------------------------------------------------------
 log "smoke-testing restored site..."
-for i in {1..30}; do
+for _ in {1..30}; do
   if curl -fsS -o /dev/null -w '%{http_code}' http://127.0.0.1:8880/srv/status | grep -q '^200$'; then
     log "restore drill PASSED — /srv/status returned 200"
     exit 0
