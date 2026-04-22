@@ -2,11 +2,18 @@
 
 End-to-end greenfield install on a fresh Ubuntu 24.04 LTS host.
 
+> **Ubuntu 26.04 LTS note.** 26.04 releases in the next few days. When it
+> ships, re-run `install.sh` on a throwaway 26.04 VM end-to-end (fresh
+> install → bootstrap → restore drill) and — if clean — bump the matrix
+> below to recommend 26.04. Until that verification PR lands, **stay on
+> 24.04 LTS**: it has support through 2029 and is what this script was
+> tested against.
+
 ## 0. Requirements
 
 | Resource | Minimum | Recommended |
 |----------|---------|-------------|
-| OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS |
+| OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS (26.04 after re-verification) |
 | vCPU | 2 | 4 |
 | RAM | 4 GB | 16 GB |
 | Disk | 20 GB SSD | 75 GB NVMe |

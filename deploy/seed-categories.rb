@@ -63,7 +63,7 @@ announcements = ensure_category(
 general = ensure_category(
   name: 'General Discussion',
   slug: 'general',
-  description: 'The town square. Chat about Tari, privacy, the MimbleWimble ecosystem, or anything on-topic.',
+  description: 'The town square. Chat about Tari, the Ootle, privacy practices, or anything on-topic.',
   color: '808281',
   permissions: EVERYONE_READ,
   position: 1
@@ -72,7 +72,7 @@ general = ensure_category(
 technical = ensure_category(
   name: 'Technical',
   slug: 'technical',
-  description: 'Protocol, consensus, cryptography, node operation, miner setup, and RandomX tuning.',
+  description: 'Implementation-level discussions: protocol, consensus, cryptography, node operation, mining, wallets, and client/core development.',
   color: '3AB54A',
   permissions: EVERYONE_READ,
   position: 2
@@ -82,7 +82,7 @@ technical = ensure_category(
 ensure_category(
   name: 'Node & Mining',
   slug: 'technical-node-mining',
-  description: 'Running base nodes, RandomX, merge mining with Monero, hashrate troubleshooting.',
+  description: 'Running base nodes, mining lanes, merge mining with Monero, hashrate troubleshooting.',
   parent: technical,
   permissions: EVERYONE_READ
 )
@@ -94,9 +94,16 @@ ensure_category(
   permissions: EVERYONE_READ
 )
 ensure_category(
-  name: 'Development',
-  slug: 'technical-development',
-  description: 'Building against Tari — RPC, gRPC, the wallet SDK, and contributing to tari-project repos.',
+  name: 'Client Development',
+  slug: 'technical-client-dev',
+  description: 'Building apps and services on Tari — RPC/gRPC, wallet SDK, Ootle smart contracts, libraries, and integrations.',
+  parent: technical,
+  permissions: EVERYONE_READ
+)
+ensure_category(
+  name: 'Core Development',
+  slug: 'technical-core-dev',
+  description: 'Contributing to Tari itself — protocol, consensus, cryptography, contract/templating features, and tari-project repos.',
   parent: technical,
   permissions: EVERYONE_READ
 )

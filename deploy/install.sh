@@ -48,7 +48,7 @@ require_env() {
   local missing=()
   for var in FORUM_DOMAIN ADMIN_EMAIL SMTP_ADDRESS SMTP_USER_NAME SMTP_PASSWORD \
              SMTP_DOMAIN NOTIFICATION_EMAIL DB_SHARED_BUFFERS UNICORN_WORKERS \
-             BACKUP_RETENTION_DAYS LETSENCRYPT_ACCOUNT_EMAIL; do
+             BACKUP_RETENTION_DAYS LETSENCRYPT_ACCOUNT_EMAIL DISCOURSE_VERSION; do
     if [[ -z "${!var:-}" ]]; then
       missing+=("$var")
     fi
