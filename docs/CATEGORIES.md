@@ -67,13 +67,13 @@ indices, staking products, or any "put money in, get money out" scheme.
 
 Hard rules, enforced by moderators:
 
-- **No unaudited financial products.** In this rule, "financial product"
-  means anything whose value proposition is monetary return (a token
-  sale, a yield product, an index, a vault, a staking-as-a-service
-  offer, etc.). This explicitly includes Tari-adjacent projects: the
-  core protocol itself is out of scope, but derivative tokens, wrapped
-  representations, and investment funds built on top of Tari are not
-  exempt.
+- **Coin discussion is allowlisted, not blocklisted.** You may discuss
+  trading, swapping, OTC deals, or price in **XTM, TARI, and wXTM** —
+  the native Tari asset and its canonical wrapped representation. Any
+  other coin, token, wrapper, index, vault, or "staking product" is
+  off-topic for Marketplace, regardless of how it's pitched. This is
+  deliberately narrow so moderators don't have to adjudicate every new
+  ticker on a case-by-case basis.
 - **No unregistered securities.** If a posting would need a prospectus
   to be legal in your jurisdiction, don't post it.
 - **No pseudo-investments disguised as sales.** "Buy my $X membership

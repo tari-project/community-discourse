@@ -25,8 +25,17 @@ The backup is a single `*.tar.gz` file written to
   `deploy/app.yml` + `.env`. NOT version-controlled. Regenerated on every
   `install.sh` run, so losing it is fine as long as `.env` is intact.
 - Container image — rebuilt from the pinned `DISCOURSE_VERSION` in `.env`.
-- TLS certs — re-issued automatically by Let's Encrypt on rebuild.
-- Cron jobs — re-installed by `install.sh`.
+- TLS certs — renewed automatically by `acme.sh` running inside the
+  container. `discourse_docker`'s `web.letsencrypt.ssl.template.yml`
+  installs `acme.sh` at build time and registers a daily `--cron` entry
+  in the container's own crontab; the job is a no-op until `acme.sh`'s
+  60-day renewal threshold (i.e. 30 days before the 90-day LE expiry)
+  and reloads nginx in-place via `sv reload nginx`, so **no host cron
+  or scheduled rebuild is needed**. Operator duty is limited to keeping
+  the container running and responding on port 443 during the renewal
+  window — if the container is stopped for more than ~30 days, certs
+  will expire and `./launcher rebuild app` is required to re-issue.
+- Cron jobs (host side) — re-installed by `install.sh`.
 
 ### Offsite S3 credentials
 

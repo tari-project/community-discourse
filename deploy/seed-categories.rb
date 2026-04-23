@@ -129,7 +129,7 @@ support = ensure_category(
 marketplace = ensure_category(
   name: 'Marketplace',
   slug: 'marketplace',
-  description: 'Community buy/sell/trade. No promotion of unaudited financial products. TL2+ to post.',
+  description: 'Community buy/sell/trade. Coin talk is limited to XTM/TARI/wXTM — other tokens, wrappers, and yield products are off-topic. TL2+ to post.',
   color: '652D90',
   permissions: TL2_UP_FULL,
   position: 5
