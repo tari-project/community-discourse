@@ -1,0 +1,55 @@
+# =============================================================================
+# Tari Community Discourse — backup configuration reference
+# =============================================================================
+# This file DOCUMENTS the backup setup. The actual cron is installed by
+# deploy/install.sh → /etc/cron.d/tari-discourse-backup, which in turn runs
+# scripts/nightly-backup.sh.
+#
+# Backups have three layers:
+#
+#   1. In-container backups. Discourse's own backup system writes to
+#      /shared/backups/default/ inside the container, which is mounted at
+#      /var/discourse/shared/standalone/backups on the host. Retention is
+#      controlled by `maximum_backups` (set from BACKUP_RETENTION_DAYS).
+#
+#   2. Host-side nightly job. scripts/nightly-backup.sh invokes the
+#      `./launcher backup app` command so backups are created by Discourse
+#      itself (consistent Postgres snapshot + uploads tarball).
+#
+#   3. Offsite (optional). If S3_BACKUP_BUCKET is set in .env, the same
+#      nightly-backup.sh script uploads the newest .tar.gz to S3 using the
+#      provided IAM credentials. Old remote backups are pruned to match the
+#      local retention policy.
+# =============================================================================
+
+schedule:
+  # Host cron fires at 03:17 UTC. Offset deliberately from the top-of-hour
+  # crowd to avoid Mailgun / Cloudflare / Let's Encrypt traffic bursts.
+  cron: "17 3 * * *"
+  timezone: "UTC"
+
+retention:
+  local_days: 14       # overridden by BACKUP_RETENTION_DAYS
+  remote_days: 30      # S3 bucket lifecycle (set via bucket policy)
+
+paths:
+  local_backup_dir: /var/discourse/shared/standalone/backups/default
+  restore_workdir: /var/discourse/shared/standalone/restore-test
+
+offsite:
+  # Authentication is IAM-user credentials stored in /etc/tari-discourse.env
+  # (sourced by nightly-backup.sh and exported into the aws CLI environment).
+  # The IAM user needs only `s3:PutObject` + `s3:DeleteObject` on the bucket
+  # prefix below; do NOT use the account root credentials.
+  enabled_if_env: S3_BACKUP_BUCKET
+  bucket: "${S3_BACKUP_BUCKET}"
+  region: "${S3_REGION}"
+  access_key_id: "${S3_ACCESS_KEY_ID}"         # env-only, never logged
+  secret_access_key: "${S3_SECRET_ACCESS_KEY}" # env-only, never logged
+  prefix: "discourse/nightly/"
+
+drill:
+  # Automated restore test runs once a week via cron (Sunday 04:30 UTC).
+  # See docs/BACKUP_RESTORE.md for the manual procedure.
+  cron: "30 4 * * 0"
+  script: /usr/local/sbin/tari-restore-test.sh
