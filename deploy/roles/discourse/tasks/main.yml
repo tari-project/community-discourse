@@ -40,6 +40,7 @@
     chdir: /opt/tari-discourse
   register: install_result
   changed_when: true
+  timeout: 1800
 
 - name: Show install.sh output
   ansible.builtin.debug:
