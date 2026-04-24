@@ -1,26 +1,24 @@
 # Install runbook
 
-End-to-end greenfield install on a fresh Ubuntu 24.04 LTS host.
+End-to-end greenfield install on a fresh host.
 
-> **Ubuntu 26.04 LTS note.** 26.04 releases in the next few days. When it
-> ships, re-run `install.sh` on a throwaway 26.04 VM end-to-end (fresh
-> install → bootstrap → restore drill) and — if clean — bump the matrix
-> below to recommend 26.04. Until that verification PR lands, **stay on
-> 24.04 LTS**: it has support through 2029 and is what this script was
-> tested against.
+> The installer auto-detects the package manager and supports both
+> Debian/Ubuntu (apt) and RHEL/AlmaLinux (dnf). The CI/CD pipeline
+> currently deploys to AlmaLinux 10.1 on Hetzner.
 
 ## 0. Requirements
 
 | Resource | Minimum | Recommended |
 |----------|---------|-------------|
-| OS | Ubuntu 22.04 LTS | Ubuntu 24.04 LTS (26.04 after re-verification) |
+| OS | Ubuntu 22.04 LTS **or** AlmaLinux 9+ | Ubuntu 24.04 LTS / AlmaLinux 10 |
 | vCPU | 2 | 4 |
-| RAM | 4 GB | 16 GB |
+| RAM | 4 GB | 8 GB+ (bootstrap peak ~6 GB) |
 | Disk | 20 GB SSD | 75 GB NVMe |
+| Swap | 2 GB | 4 GB (required if RAM < 8 GB) |
 | IPv4 | public, static | public, static |
 | Ports | 22, 80, 443 open | 22, 80, 443 open |
-| DNS | A/AAAA → host | A/AAAA → host |
-| SMTP | transactional provider | Mailgun / SES / Postmark |
+| DNS | A/AAAA → host | A/AAAA → host (not proxied — see below) |
+| SMTP | transactional provider | Resend / Mailgun / SES / Postmark |
 
 Discourse **will not start without working outbound SMTP**. Sign up for
 Mailgun/SES/Postmark *before* running the installer.
@@ -110,8 +108,14 @@ container, it will just re-render `app.yml` and `launcher rebuild app`.
 host, or port 80 is not reachable from the internet. Fix the DNS/firewall and
 re-run `install.sh`.
 
+> **Cloudflare users:** If your A record is orange-clouded (proxied),
+> Let's Encrypt's HTTP-01 challenge will hit Cloudflare, not your host.
+> Set the record to **DNS only** (grey cloud) before running install.sh.
+> You can re-enable the proxy after the cert is issued if desired, but
+> cert renewals (every 60 days) also need direct access to port 80.
+
 **"SMTP connection timed out"** — most VPS providers block outbound port 25.
-Use a provider like Mailgun/SES/Postmark on 587 with STARTTLS, not raw 25.
+Use a provider like Resend/Mailgun/SES/Postmark on 587 with STARTTLS, not raw 25.
 
 **"Backend application failed to respond" (502 after bootstrap)** — watch
 `./scripts/tail-logs.sh rails`; nine times out of ten it's a missing
@@ -119,3 +123,23 @@ Use a provider like Mailgun/SES/Postmark on 587 with STARTTLS, not raw 25.
 
 **Rebuild is stuck at "cloning discourse"** — `git clone` inside the container
 is proxied; check `/etc/docker/daemon.json` and corporate proxy settings.
+
+**Bootstrap fails with stale Postgres data** — if a previous bootstrap was
+interrupted, leftover Postgres data can prevent a clean restart. Clean it:
+```bash
+rm -rf /var/discourse/shared/standalone/postgres_data \
+       /var/discourse/shared/standalone/postgres_run
+```
+Then re-run `install.sh`.
+
+**SSH connection drops during bootstrap (Ansible "UNREACHABLE")** — the
+Discourse bootstrap takes ~15 minutes. If your SSH connection times out,
+add keepalive settings to `deploy/ansible.cfg`:
+```ini
+[ssh_connection]
+ssh_args = -o ServerAliveInterval=30 -o ServerAliveCountMax=60 -o TCPKeepAlive=yes
+```
+
+**AlmaLinux: `get.docker.com` fails** — the Docker convenience script does not
+support AlmaLinux. `install.sh` handles this automatically by using the Docker
+CentOS repo via `dnf config-manager --add-repo`. No manual intervention needed.

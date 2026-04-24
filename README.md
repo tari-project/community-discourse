@@ -25,7 +25,7 @@ A submission must demonstrably satisfy all six criteria to be accepted:
 | Path | Purpose |
 |------|---------|
 | `deploy/app.yml` | Discourse container definition (templated) |
-| `deploy/install.sh` | Idempotent bootstrap script for a fresh Ubuntu 24.04 host |
+| `deploy/install.sh` | Idempotent bootstrap script (Ubuntu 22.04+, AlmaLinux 9+) |
 | `deploy/site.yml` | Ansible playbook — entry point for CI/CD deploy |
 | `deploy/ansible.cfg` | Ansible configuration (inventory path, SSH pipelining) |
 | `deploy/inventory/hetzner.yml` | Ansible inventory — Hetzner host definition |
@@ -33,7 +33,8 @@ A submission must demonstrably satisfy all six criteria to be accepted:
 | `deploy/seed-categories.rb` | Rails runner script that creates the initial category tree + trust-level ACLs |
 | `deploy/backup.yml` | Nightly backup cron + optional S3 offload |
 | `deploy/restore-test.sh` | Downloads the most recent backup and restores it into a throwaway container (satisfies "test a restore") |
-| `deploy/templates/` | Custom Discourse templates merged into `app.yml` |
+| `.github/workflows/deploy.yml` | CI/CD: lint then deploy on push to `main` via Ansible |
+| `.github/workflows/lint.yml` | ShellCheck, yamllint, markdown-link-check |
 | `scripts/` | One-shot operator helpers (rotate admin, rebuild, tail logs) |
 | `branding/` | Logo, favicon, theme overrides |
 | `docs/INSTALL.md` | Greenfield install runbook |
@@ -77,8 +78,9 @@ Full runbook: [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## Infrastructure
 
-- **VPS**: Hetzner (178.105.25.174)
-- **Domain**: `community.tari.com`
+- **VPS**: Hetzner (178.105.25.174), AlmaLinux 10.1, 4 vCPU / 7.3 GB RAM / 75 GB NVMe
+- **Domain**: `community.tari.com` (Cloudflare DNS)
+- **SMTP**: Resend (`smtp.resend.com:587`)
 - **Deploy**: Push to `main` (CI/CD via `.github/workflows/deploy.yml`)
 - **Admin handover**: Credentials delivered to @metalaureate at completion
 

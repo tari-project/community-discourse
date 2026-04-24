@@ -20,6 +20,10 @@ to the Tari project lead.
       `/admin/site_settings/category/branding`
 - [ ] Moderation emails (`moderation@<FORUM_DOMAIN>`) forwarding to staff
       mailbox
+- [ ] CI/CD pipeline deploying successfully (check Actions tab for a green
+      run on `main`)
+- [ ] GitHub Actions secrets (`SSH_PRIVATE_KEY`, `ENV_PRODUCTION`) are set
+      in repo Settings > Secrets
 - [ ] DNS TTL lowered temporarily to 300s so the team can retarget records
       quickly if needed
 
@@ -52,6 +56,9 @@ to the Tari project lead.
 5. **Transfer secrets** (secure channel, same as above):
    - `.env` file contents (SMTP, Let's Encrypt email, S3 keys, GitHub
      OAuth client ID/secret)
+   - **GitHub Actions secrets** on the repo (Settings > Secrets):
+     - `SSH_PRIVATE_KEY` — the ed25519 private key authorized on the host
+     - `ENV_PRODUCTION` — the full `.env` contents used by CI/CD
    - Mailgun / SES / Postmark account credentials (or coordinate provider
      ownership transfer)
    - GitHub OAuth app ownership — transfer to a tari-project org account
