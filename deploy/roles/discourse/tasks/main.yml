@@ -36,7 +36,7 @@
 
 - name: Run install.sh
   ansible.builtin.command:
-    cmd: ./deploy/install.sh
+    cmd: bash ./deploy/install.sh
     chdir: /opt/tari-discourse
   register: install_result
   changed_when: true
