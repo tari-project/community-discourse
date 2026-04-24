@@ -99,11 +99,6 @@ hooks:
             else
               echo "[tari] Categories already seeded — skipping."
             fi
-          - |
-            if [ -f /shared/tari-seed/seed-branding.rb ]; then
-              echo "[tari] Applying branding..."
-              su discourse -c 'cd $home && bundle exec rails runner /shared/tari-seed/seed-branding.rb' || true
-            fi
 
 ## =============================================================================
 ## Runtime commands — executed each time the container boots
@@ -113,4 +108,13 @@ run:
   ## Make sure crontab inside the container runs the nightly backup.
   - exec: rails r "SiteSetting.backup_frequency = 1"
   - exec: rails r "SiteSetting.maximum_backups = ${BACKUP_RETENTION_DAYS}"
+  ## Apply branding (logos, fonts, site settings) — needs full stack running
+  - exec:
+      cd: $home
+      cmd:
+        - |
+          if [ -f /shared/tari-seed/seed-branding.rb ]; then
+            echo "[tari] Applying branding at runtime..."
+            rails runner /shared/tari-seed/seed-branding.rb || echo "[tari] branding seeder had errors (non-fatal)"
+          fi
   - exec: echo "End of custom commands"

@@ -21,17 +21,21 @@ def upload_site_image(setting_name, file_path, filename)
     return
   end
 
-  upload = UploadCreator.new(
-    File.open(file_path),
-    filename,
-    type: "site_setting"
-  ).create_for(SYSTEM_USER.id)
+  begin
+    upload = UploadCreator.new(
+      File.open(file_path),
+      filename,
+      type: "site_setting"
+    ).create_for(SYSTEM_USER.id)
 
-  if upload.persisted?
-    SiteSetting.public_send("#{setting_name}=", upload)
-    puts "[tari-brand] #{setting_name} = #{upload.url}"
-  else
-    warn "[tari-brand] !! upload failed for #{setting_name}: #{upload.errors.full_messages.join(', ')}"
+    if upload.persisted?
+      SiteSetting.public_send("#{setting_name}=", upload)
+      puts "[tari-brand] #{setting_name} = #{upload.url}"
+    else
+      warn "[tari-brand] !! upload failed for #{setting_name}: #{upload.errors.full_messages.join(', ')}"
+    end
+  rescue => e
+    warn "[tari-brand] !! exception uploading #{setting_name}: #{e.class} #{e.message}"
   end
 end
 
@@ -100,17 +104,57 @@ ASSET_DIR = '/shared/tari-seed/assets'
 end
 
 # -----------------------------------------------------------------------------
-# 3. Font and typography via theme CSS
+# 3. Font and typography via theme component
 # -----------------------------------------------------------------------------
 puts '[tari-brand] Configuring typography...'
 
-# Base font — Poppins via Google Fonts
-SiteSetting.base_font = 'poppins'
-puts "[tari-brand] base_font = poppins"
+# Poppins is not in Discourse's built-in font list, so we load it via
+# a theme component that injects Google Fonts and overrides the CSS.
+TARI_FONT_CSS = <<~SCSS
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-# Heading font — also Poppins (Druk requires self-hosting, start with Poppins)
-SiteSetting.heading_font = 'poppins'
-puts "[tari-brand] heading_font = poppins"
+  :root {
+    --font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    --heading-font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  }
+
+  html {
+    font-family: var(--font-family);
+  }
+
+  h1, h2, h3, h4, h5, h6,
+  .topic-list .topic-list-data a.title,
+  .category-name {
+    font-family: var(--heading-font-family);
+  }
+SCSS
+
+default_theme = Theme.find_by(id: SiteSetting.default_theme_id) || Theme.where(default: true).first
+if default_theme
+  # Find or create Tari branding child theme component
+  tari_component = Theme.find_by(name: 'Tari Branding')
+  unless tari_component
+    tari_component = Theme.create!(
+      name: 'Tari Branding',
+      user_id: SYSTEM_USER.id,
+      component: true
+    )
+    puts "[tari-brand] Created 'Tari Branding' theme component"
+  end
+
+  # Set the CSS
+  tari_component.set_field(target: :common, name: :scss, value: TARI_FONT_CSS)
+  tari_component.save!
+  puts "[tari-brand] Updated Tari Branding SCSS"
+
+  # Attach to default theme if not already
+  unless default_theme.child_themes.include?(tari_component)
+    default_theme.add_relative_theme!(:child, tari_component)
+    puts "[tari-brand] Attached 'Tari Branding' component to '#{default_theme.name}'"
+  end
+else
+  warn "[tari-brand] !! No default theme found — cannot set font override."
+end
 
 # -----------------------------------------------------------------------------
 # 4. Additional branding settings
