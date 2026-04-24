@@ -116,8 +116,14 @@ install_docker() {
     log "Docker already installed ($(docker --version))."
     return 0
   fi
-  log "Installing Docker via the official convenience script..."
-  curl -fsSL https://get.docker.com | sh || die "Docker install failed." 4
+  if [[ "${PKG_MGR}" == "apt" ]]; then
+    log "Installing Docker via the official convenience script..."
+    curl -fsSL https://get.docker.com | sh || die "Docker install failed." 4
+  else
+    log "Installing Docker from the official CentOS/RHEL repo..."
+    dnf config-manager addrepo --from-repofile=https://download.docker.com/linux/centos/docker-ce.repo
+    dnf install -y -q docker-ce docker-ce-cli containerd.io docker-buildx-plugin || die "Docker install failed." 4
+  fi
   systemctl enable --now docker
 }
 
