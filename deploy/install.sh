@@ -139,10 +139,10 @@ configure_firewall() {
   else
     log "Configuring firewalld: allow ssh, http, https."
     systemctl enable --now firewalld
-    firewall-cmd --permanent --add-service=ssh
+    firewall-cmd --permanent --add-service=ssh || true
     firewall-cmd --permanent --add-service=http
     firewall-cmd --permanent --add-service=https
-    firewall-cmd --permanent --set-default-zone=drop
+    firewall-cmd --set-default-zone=drop
     firewall-cmd --reload
   fi
 }
