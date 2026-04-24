@@ -1,4 +1,9 @@
 ---
+- name: Ensure git is installed
+  ansible.builtin.package:
+    name: git
+    state: present
+
 - name: Ensure /opt/tari-discourse exists
   ansible.builtin.stat:
     path: /opt/tari-discourse/.git
