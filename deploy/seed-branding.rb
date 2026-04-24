@@ -7,23 +7,45 @@
 # the Tari color scheme and font overrides. IDEMPOTENT — safe to re-run.
 #
 # Assets must be staged to /shared/tari-seed/assets/ before running.
+# Falls back to downloading from GitHub if local files are missing.
 # See branding/STYLE_GUIDE.md for full details.
 # =============================================================================
 
+require 'open-uri'
+require 'tempfile'
+
 SYSTEM_USER = Discourse.system_user
+
+GITHUB_RAW_BASE = 'https://raw.githubusercontent.com/tari-project/community-discourse/main/branding/assets'
 
 # -----------------------------------------------------------------------------
 # Helper: upload a file as a site setting image
 # -----------------------------------------------------------------------------
 def upload_site_image(setting_name, file_path, filename)
-  unless File.exist?(file_path)
-    warn "[tari-brand] !! #{file_path} not found — skipping #{setting_name}"
-    return
+  file_to_upload = nil
+
+  if File.exist?(file_path)
+    file_to_upload = File.open(file_path)
+    puts "[tari-brand] Using local file: #{file_path}"
+  else
+    # Fallback: download from GitHub raw
+    github_url = "#{GITHUB_RAW_BASE}/#{File.basename(file_path)}"
+    puts "[tari-brand] Local file #{file_path} not found — downloading from #{github_url}"
+    begin
+      tmp = Tempfile.new([File.basename(file_path, '.*'), File.extname(file_path)])
+      tmp.binmode
+      URI.open(github_url) { |remote| tmp.write(remote.read) }
+      tmp.rewind
+      file_to_upload = tmp
+    rescue => e
+      puts "[tari-brand] !! Failed to download #{github_url}: #{e.class} #{e.message}"
+      return
+    end
   end
 
   begin
     upload = UploadCreator.new(
-      File.open(file_path),
+      file_to_upload,
       filename,
       type: "site_setting"
     ).create_for(SYSTEM_USER.id)
@@ -32,10 +54,12 @@ def upload_site_image(setting_name, file_path, filename)
       SiteSetting.public_send("#{setting_name}=", upload)
       puts "[tari-brand] #{setting_name} = #{upload.url}"
     else
-      warn "[tari-brand] !! upload failed for #{setting_name}: #{upload.errors.full_messages.join(', ')}"
+      puts "[tari-brand] !! upload failed for #{setting_name}: #{upload.errors.full_messages.join(', ')}"
     end
   rescue => e
-    warn "[tari-brand] !! exception uploading #{setting_name}: #{e.class} #{e.message}"
+    puts "[tari-brand] !! exception uploading #{setting_name}: #{e.class} #{e.message}"
+  ensure
+    file_to_upload.close if file_to_upload
   end
 end
 
@@ -82,7 +106,7 @@ if default_theme
   default_theme.update!(color_scheme_id: scheme.id)
   puts "[tari-brand] Applied 'Tari Brand' scheme to theme '#{default_theme.name}'"
 else
-  warn "[tari-brand] !! No default theme found — set the color scheme manually in admin."
+  puts "[tari-brand] !! No default theme found — set the color scheme manually in admin."
 end
 
 # -----------------------------------------------------------------------------
@@ -91,6 +115,14 @@ end
 puts '[tari-brand] Uploading brand assets...'
 
 ASSET_DIR = '/shared/tari-seed/assets'
+
+# Diagnostic: list what's actually in the asset directory
+if Dir.exist?(ASSET_DIR)
+  files = Dir.entries(ASSET_DIR).reject { |f| f.start_with?('.') }
+  puts "[tari-brand] Assets found in #{ASSET_DIR}: #{files.join(', ')}"
+else
+  puts "[tari-brand] !! Asset directory #{ASSET_DIR} does not exist!"
+end
 
 {
   'logo'             => ['logo.png',             'tari-logo.png'],
@@ -153,7 +185,7 @@ if default_theme
     puts "[tari-brand] Attached 'Tari Branding' component to '#{default_theme.name}'"
   end
 else
-  warn "[tari-brand] !! No default theme found — cannot set font override."
+  puts "[tari-brand] !! No default theme found — cannot set font override."
 end
 
 # -----------------------------------------------------------------------------
@@ -171,8 +203,12 @@ puts '[tari-brand] Setting additional brand properties...'
     SiteSetting.public_send("#{k}=", v)
     puts "[tari-brand]   #{k} = #{v}"
   rescue => e
-    warn "[tari-brand]   !! failed to set #{k}: #{e.message}"
+    puts "[tari-brand]   !! failed to set #{k}: #{e.message}"
   end
 end
 
 puts '[tari-brand] done.'
+
+# Force theme recompilation to pick up all changes
+Theme.expire_site_cache!
+puts '[tari-brand] Cleared theme cache.'

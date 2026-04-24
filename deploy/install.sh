@@ -180,8 +180,22 @@ stage_seed_script() {
   install -m 0644 "${REPO_DIR}/deploy/seed-branding.rb" \
     "${DISCOURSE_DIR}/shared/standalone/tari-seed/seed-branding.rb"
   mkdir -p "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets"
-  cp -f "${REPO_DIR}/branding/assets/"*.png \
-    "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/" 2>/dev/null || true
+  local png_count
+  png_count=$(find "${REPO_DIR}/branding/assets" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
+  if [[ "${png_count}" -gt 0 ]]; then
+    cp -f "${REPO_DIR}/branding/assets/"*.png \
+      "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/"
+    log "Staged ${png_count} PNG assets into shared volume."
+    ls -la "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/" | while read -r line; do
+      log "  ${line}"
+    done
+  else
+    warn "No PNG files found in ${REPO_DIR}/branding/assets/ — logo uploads will be skipped."
+    log "Contents of ${REPO_DIR}/branding/assets/:"
+    ls -la "${REPO_DIR}/branding/assets/" 2>&1 | while read -r line; do
+      log "  ${line}"
+    done
+  fi
 }
 
 bootstrap_or_rebuild() {
