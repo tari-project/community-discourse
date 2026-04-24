@@ -24,7 +24,9 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install Ansible
-        run: pip install ansible-core
+        run: |
+          pip install ansible-core
+          ansible-galaxy collection install community.general
 
       - name: Write .env from secret
         run: |
