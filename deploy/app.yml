@@ -99,6 +99,11 @@ hooks:
             else
               echo "[tari] Categories already seeded — skipping."
             fi
+          - |
+            if [ -f /shared/tari-seed/seed-branding.rb ]; then
+              echo "[tari] Applying branding..."
+              su discourse -c 'cd $home && bundle exec rails runner /shared/tari-seed/seed-branding.rb' || true
+            fi
 
 ## =============================================================================
 ## Runtime commands — executed each time the container boots

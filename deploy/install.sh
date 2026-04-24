@@ -175,6 +175,13 @@ stage_seed_script() {
   log "Staging category seed script into shared volume..."
   install -m 0644 "${SEED_SCRIPT_SRC}" \
     "${DISCOURSE_DIR}/shared/standalone/tari-seed/seed-categories.rb"
+
+  log "Staging branding seed script and assets..."
+  install -m 0644 "${REPO_DIR}/deploy/seed-branding.rb" \
+    "${DISCOURSE_DIR}/shared/standalone/tari-seed/seed-branding.rb"
+  mkdir -p "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets"
+  cp -f "${REPO_DIR}/branding/assets/"*.png \
+    "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/" 2>/dev/null || true
 }
 
 bootstrap_or_rebuild() {

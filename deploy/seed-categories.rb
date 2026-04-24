@@ -11,7 +11,7 @@
 
 ADMIN = User.find_by(admin: true) || Discourse.system_user
 
-def ensure_category(name:, slug:, description:, color: 'BF1E2E', text_color: 'FFFFFF', parent: nil, permissions: nil, position: nil)
+def ensure_category(name:, slug:, description:, color: 'FE2C3F', text_color: 'FFFFFF', parent: nil, permissions: nil, position: nil)
   cat = Category.find_or_create_by!(name: name) do |c|
     c.user_id     = ADMIN.id
     c.slug        = slug
@@ -55,7 +55,7 @@ announcements = ensure_category(
   name: 'Announcements',
   slug: 'announcements',
   description: 'Official news from the Tari core team. Read-only for everyone; only staff can post here.',
-  color: 'BF1E2E',
+  color: 'FE2C3F',
   permissions: { everyone: :readonly, staff: :full },
   position: 0
 )
