@@ -15,14 +15,12 @@ jobs:
   deploy:
     needs: lint
     runs-on: ubuntu-latest
-    environment: production
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.10.0
         with:
-          ssh-known-hosts: ""
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Install Ansible
