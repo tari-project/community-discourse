@@ -1,0 +1,45 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  lint:
+    uses: ./.github/workflows/lint.yml
+
+  deploy:
+    needs: lint
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.10.0
+        with:
+          ssh-known-hosts: ""
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Install Ansible
+        run: pip install ansible-core
+
+      - name: Write .env from secret
+        run: |
+          echo "${{ secrets.ENV_PRODUCTION }}" > /tmp/.env
+
+      - name: Run Ansible playbook
+        working-directory: deploy
+        run: |
+          ansible-playbook site.yml \
+            -e "env_file=/tmp/.env"
+        env:
+          ANSIBLE_FORCE_COLOR: "1"
+
+      - name: Clean up
+        if: always()
+        run: rm -f /tmp/.env

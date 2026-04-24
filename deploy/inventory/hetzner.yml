@@ -1,0 +1,5 @@
+discourse:
+  hosts:
+    community:
+      ansible_host: 178.105.25.174
+      ansible_user: root

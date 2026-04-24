@@ -76,17 +76,38 @@ require_dns() {
 # -----------------------------------------------------------------------------
 # 1. Host packages + Docker
 # -----------------------------------------------------------------------------
-install_host_packages() {
-  log "Updating apt and installing base packages..."
-  export DEBIAN_FRONTEND=noninteractive
-  apt-get update -qq
-  apt-get install -yqq \
-    ca-certificates curl git gnupg lsb-release \
-    ufw fail2ban unattended-upgrades \
-    jq openssl
+# Detect package manager (Ubuntu/Debian vs RHEL/AlmaLinux)
+# -----------------------------------------------------------------------------
+detect_distro() {
+  if command -v dnf >/dev/null 2>&1; then
+    PKG_MGR=dnf
+  elif command -v apt-get >/dev/null 2>&1; then
+    PKG_MGR=apt
+  else
+    die "Unsupported distro — need apt-get (Debian/Ubuntu) or dnf (RHEL/AlmaLinux)." 1
+  fi
+  log "Detected package manager: ${PKG_MGR}"
+}
 
-  # Enable unattended security updates — one fewer thing for handover.
-  dpkg-reconfigure -f noninteractive unattended-upgrades
+install_host_packages() {
+  if [[ "${PKG_MGR}" == "apt" ]]; then
+    log "Updating apt and installing base packages..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -yqq \
+      ca-certificates curl git gnupg lsb-release \
+      ufw fail2ban unattended-upgrades \
+      jq openssl gettext-base
+    dpkg-reconfigure -f noninteractive unattended-upgrades
+  else
+    log "Updating dnf and installing base packages..."
+    dnf install -y -q \
+      ca-certificates curl git gnupg2 \
+      fail2ban firewalld dnf-automatic \
+      jq openssl gettext
+    # Enable automatic security updates
+    systemctl enable --now dnf-automatic-install.timer
+  fi
 }
 
 install_docker() {
@@ -100,17 +121,23 @@ install_docker() {
 }
 
 configure_firewall() {
-  log "Configuring UFW: allow 22, 80, 443; deny everything else inbound."
-  # Do NOT use `ufw --force reset`: it wipes all rules immediately, which
-  # terminates the current SSH session on a remote server before the allow-22
-  # rule is re-added. Instead set the defaults and add rules while UFW is
-  # either still off or already running — the existing session is not affected.
-  ufw default deny incoming
-  ufw default allow outgoing
-  ufw allow 22/tcp   comment 'SSH'
-  ufw allow 80/tcp   comment 'HTTP (Discourse / Let'\''s Encrypt HTTP-01)'
-  ufw allow 443/tcp  comment 'HTTPS (Discourse)'
-  ufw --force enable
+  if [[ "${PKG_MGR}" == "apt" ]]; then
+    log "Configuring UFW: allow 22, 80, 443; deny everything else inbound."
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow 22/tcp   comment 'SSH'
+    ufw allow 80/tcp   comment 'HTTP (Discourse / Let'\''s Encrypt HTTP-01)'
+    ufw allow 443/tcp  comment 'HTTPS (Discourse)'
+    ufw --force enable
+  else
+    log "Configuring firewalld: allow ssh, http, https."
+    systemctl enable --now firewalld
+    firewall-cmd --permanent --add-service=ssh
+    firewall-cmd --permanent --add-service=http
+    firewall-cmd --permanent --add-service=https
+    firewall-cmd --permanent --set-default-zone=drop
+    firewall-cmd --reload
+  fi
 }
 
 # -----------------------------------------------------------------------------
@@ -229,6 +256,7 @@ EOF
 main() {
   require_root
   require_env
+  detect_distro
   require_dns
   install_host_packages
   install_docker

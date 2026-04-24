@@ -1,0 +1,5 @@
+---
+- name: Deploy Tari Community Discourse
+  hosts: discourse
+  roles:
+    - discourse

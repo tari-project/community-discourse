@@ -1,0 +1,2 @@
+---
+forum_domain: "{{ lookup('pipe', 'grep ^FORUM_DOMAIN ' ~ env_file ~ ' | cut -d= -f2-') }}"

@@ -28,15 +28,35 @@ Day-2 ops for the Tari Discourse forum. Assumes install is complete per
 
 ### Upgrade Discourse
 
+Push a change to `main` and the CI/CD pipeline handles the rest:
+
 ```bash
+# edit .env to bump DISCOURSE_VERSION, or change deploy/app.yml, etc.
+git commit -am "chore: bump Discourse to vX.Y.Z"
+git push origin main
+```
+
+The GitHub Actions workflow (`.github/workflows/deploy.yml`) will:
+1. Lint all scripts and YAML
+2. SSH to Hetzner via Ansible
+3. Pull the latest repo to `/opt/tari-discourse`
+4. Copy the `.env` from `ENV_PRODUCTION` secret
+5. Run `install.sh` (re-renders `app.yml`, rebuilds the container)
+6. Health-check `https://<FORUM_DOMAIN>/srv/status`
+
+Expect ~5 minutes of downtime during rebuild on a 4 vCPU host.
+
+**Manual fallback** (if CI is unavailable):
+
+```bash
+ssh root@178.105.25.174
 cd /opt/tari-discourse
 git pull
 sudo ./scripts/rebuild.sh
 ```
 
 `rebuild.sh` takes a fresh backup first, then re-runs `install.sh` which
-re-renders `app.yml` and does `./launcher rebuild app`. Expect ~5 minutes of
-downtime on a 4 vCPU host.
+re-renders `app.yml` and does `./launcher rebuild app`.
 
 **Pin the version** in `.env` (`DISCOURSE_VERSION=<tag>`) for reproducible
 rebuilds between scheduled upgrade windows.
@@ -44,8 +64,7 @@ rebuilds between scheduled upgrade windows.
 ### Add a plugin
 
 1. Edit `deploy/app.yml` under `hooks.after_code` and add a `git clone` line.
-2. Commit + push the change.
-3. On the host: `git pull && sudo ./scripts/rebuild.sh`.
+2. Commit + push to `main`. The CI/CD pipeline will rebuild automatically.
 
 Avoid pinning plugins to `master` — pin to a tag, or at least a commit, so
 that rebuilds are reproducible.

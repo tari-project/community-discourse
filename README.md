@@ -26,6 +26,10 @@ A submission must demonstrably satisfy all six criteria to be accepted:
 |------|---------|
 | `deploy/app.yml` | Discourse container definition (templated) |
 | `deploy/install.sh` | Idempotent bootstrap script for a fresh Ubuntu 24.04 host |
+| `deploy/site.yml` | Ansible playbook — entry point for CI/CD deploy |
+| `deploy/ansible.cfg` | Ansible configuration (inventory path, SSH pipelining) |
+| `deploy/inventory/hetzner.yml` | Ansible inventory — Hetzner host definition |
+| `deploy/roles/discourse/` | Ansible role — syncs repo, copies .env, runs install.sh |
 | `deploy/seed-categories.rb` | Rails runner script that creates the initial category tree + trust-level ACLs |
 | `deploy/backup.yml` | Nightly backup cron + optional S3 offload |
 | `deploy/restore-test.sh` | Downloads the most recent backup and restores it into a throwaway container (satisfies "test a restore") |
@@ -42,7 +46,24 @@ A submission must demonstrably satisfy all six criteria to be accepted:
 | `docs/HANDOVER.md` | Checklist for handing control to Tari Labs |
 | `.env.example` | All templated variables with safe defaults |
 
-## Quick start
+## Deploying
+
+Push to `main` triggers automated deployment via GitHub Actions + Ansible:
+
+```
+git push main → GitHub Actions → Ansible SSHes to Hetzner → syncs repo + .env → runs install.sh
+```
+
+No manual SSH required. The workflow lints first, then deploys.
+
+### GitHub secrets required
+
+| Secret | Purpose |
+|--------|---------|
+| `SSH_PRIVATE_KEY` | SSH key authorized on the Hetzner host's `root` account |
+| `ENV_PRODUCTION` | Full contents of `.env` (FORUM_DOMAIN, SMTP creds, etc.) |
+
+### Manual bootstrap (first time only)
 
 ```bash
 git clone https://github.com/tari-project/community-discourse.git
@@ -56,8 +77,9 @@ Full runbook: [`docs/INSTALL.md`](docs/INSTALL.md).
 
 ## Infrastructure
 
-- **VPS**: Provided by Tari Labs (credentials shared privately after PR is opened)
+- **VPS**: Hetzner (178.105.25.174)
 - **Domain**: `community.tari.com`
+- **Deploy**: Push to `main` (CI/CD via `.github/workflows/deploy.yml`)
 - **Admin handover**: Credentials delivered to @metalaureate at completion
 
 ## Contributing
