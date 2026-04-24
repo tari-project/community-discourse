@@ -180,11 +180,14 @@ stage_seed_script() {
   install -m 0644 "${REPO_DIR}/deploy/seed-branding.rb" \
     "${DISCOURSE_DIR}/shared/standalone/tari-seed/seed-branding.rb"
   mkdir -p "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets"
+  chmod 755 "${DISCOURSE_DIR}/shared/standalone/tari-seed" \
+            "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets"
   local png_count
   png_count=$(find "${REPO_DIR}/branding/assets" -maxdepth 1 -name '*.png' 2>/dev/null | wc -l)
   if [[ "${png_count}" -gt 0 ]]; then
     cp -f "${REPO_DIR}/branding/assets/"*.png \
       "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/"
+    chmod 644 "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/"*.png
     log "Staged ${png_count} PNG assets into shared volume."
     ls -la "${DISCOURSE_DIR}/shared/standalone/tari-seed/assets/" | while read -r line; do
       log "  ${line}"
