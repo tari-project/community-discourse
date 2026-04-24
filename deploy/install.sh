@@ -142,7 +142,6 @@ configure_firewall() {
     firewall-cmd --permanent --add-service=ssh || true
     firewall-cmd --permanent --add-service=http
     firewall-cmd --permanent --add-service=https
-    firewall-cmd --set-default-zone=drop
     firewall-cmd --reload
   fi
 }
