@@ -106,7 +106,6 @@ hooks:
 run:
   - exec: echo "Beginning of custom commands"
   ## Make sure crontab inside the container runs the nightly backup.
-  - exec: rails r "SiteSetting.automatic_backups_enabled = true"
   - exec: rails r "SiteSetting.backup_frequency = 1"
   - exec: rails r "SiteSetting.maximum_backups = ${BACKUP_RETENTION_DAYS}"
   - exec: echo "End of custom commands"

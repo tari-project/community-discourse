@@ -194,7 +194,6 @@ settings = {
   'tl3_requires_likes_received'     => 20,
 
   # Backups
-  'automatic_backups_enabled'       => true,
   'backup_frequency'                => 1,
   'maximum_backups'                 => (ENV['BACKUP_RETENTION_DAYS'] || '14').to_i,
 
