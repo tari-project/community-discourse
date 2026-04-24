@@ -101,6 +101,7 @@ install_host_packages() {
     dpkg-reconfigure -f noninteractive unattended-upgrades
   else
     log "Updating dnf and installing base packages..."
+    dnf install -y -q epel-release
     dnf install -y -q \
       ca-certificates curl git gnupg2 \
       fail2ban firewalld dnf-automatic \
