@@ -111,8 +111,12 @@ end
 
 # Disable automatic dark/light switching — dark is the default for everyone.
 # Users can still choose a light scheme in their preferences.
-SiteSetting.default_dark_mode_color_scheme_id = -1
-puts '[tari-brand] Disabled auto dark-mode switching (dark is default)'
+begin
+  SiteSetting.default_dark_mode_color_scheme_id = -1
+  puts '[tari-brand] Disabled auto dark-mode switching (dark is default)'
+rescue => e
+  puts "[tari-brand] Could not disable dark mode switching: #{e.class} #{e.message}"
+end
 
 # -----------------------------------------------------------------------------
 # 2. Upload logo and icon assets
