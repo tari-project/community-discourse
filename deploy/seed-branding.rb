@@ -69,15 +69,15 @@ end
 puts '[tari-brand] Configuring Tari color scheme...'
 
 TARI_COLORS = {
-  'primary'           => '040723',  # Ink — main text
-  'secondary'         => 'FBF1E9',  # Off White — page background
-  'tertiary'          => '0939CF',  # Azure — links (better contrast than Purple)
-  'quaternary'        => '813BF5',  # Purple — navigation accent
+  'primary'           => 'ECEEFF',  # Cloud — text (light on dark bg)
+  'secondary'         => '040723',  # Ink — page background (dark)
+  'tertiary'          => '813BF5',  # Purple — links (good contrast on dark)
+  'quaternary'        => 'C9EB00',  # Green — navigation accent
   'header_background' => '040723',  # Ink — dark header
   'header_primary'    => 'ECEEFF',  # Cloud — header text
   'highlight'         => 'EBC216',  # Yellow — highlights
   'danger'            => 'FE2C3F',  # Red — danger/alerts
-  'success'           => '3AB54A',  # Muted green (C9EB00 is too bright on white)
+  'success'           => 'C9EB00',  # Green — success (bright, visible on dark)
   'love'              => '813BF5',  # Purple — like button
 }
 
@@ -109,6 +109,11 @@ else
   puts "[tari-brand] !! No default theme found — set the color scheme manually in admin."
 end
 
+# Disable automatic dark/light switching — dark is the default for everyone.
+# Users can still choose a light scheme in their preferences.
+SiteSetting.default_dark_mode_color_scheme_id = -1
+puts '[tari-brand] Disabled auto dark-mode switching (dark is default)'
+
 # -----------------------------------------------------------------------------
 # 2. Upload logo and icon assets
 # -----------------------------------------------------------------------------
@@ -125,12 +130,12 @@ else
 end
 
 {
-  'logo'             => ['logo.png',             'tari-logo.png'],
-  'logo_small'       => ['logo-small.png',       'tari-logo-small.png'],
+  'logo'             => ['logo-dark.png',        'tari-logo.png'],         # White wordmark (dark bg default)
+  'logo_small'       => ['logo-small.png',       'tari-logo-small.png'],   # White mark only (dark bg)
   'favicon'          => ['favicon.png',          'tari-favicon.png'],
   'apple_touch_icon' => ['apple-touch-icon.png', 'tari-apple-touch-icon.png'],
   'large_icon'       => ['large-icon.png',       'tari-large-icon.png'],
-  'logo_dark'        => ['logo-dark.png',        'tari-logo-dark.png'],
+  'logo_dark'        => ['logo-dark.png',        'tari-logo-dark.png'],    # Same white wordmark
 }.each do |setting, (local_name, upload_name)|
   upload_site_image(setting, File.join(ASSET_DIR, local_name), upload_name)
 end
