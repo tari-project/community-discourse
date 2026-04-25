@@ -100,22 +100,22 @@ else
   )
 end
 
-# Set as the default color scheme for the default theme
+# Our "Tari Brand" scheme IS dark, so set it as both the theme's light AND
+# dark color scheme. This way everyone gets Tari dark regardless of OS pref.
 default_theme = Theme.find_by(id: SiteSetting.default_theme_id) || Theme.where(default: true).first
 if default_theme
   default_theme.update!(color_scheme_id: scheme.id)
   puts "[tari-brand] Applied 'Tari Brand' scheme to theme '#{default_theme.name}'"
+
+  # Also set the dark-mode variant to our scheme (not Discourse's default "Dark")
+  begin
+    default_theme.update_column(:dark_color_scheme_id, scheme.id)
+    puts "[tari-brand] Applied 'Tari Brand' as dark-mode scheme (id=#{scheme.id})"
+  rescue => e
+    puts "[tari-brand] Could not set dark_color_scheme_id: #{e.class} #{e.message}"
+  end
 else
   puts "[tari-brand] !! No default theme found — set the color scheme manually in admin."
-end
-
-# Disable automatic dark/light switching — dark is the default for everyone.
-# Users can still choose a light scheme in their preferences.
-begin
-  SiteSetting.default_dark_mode_color_scheme_id = -1
-  puts '[tari-brand] Disabled auto dark-mode switching (dark is default)'
-rescue => e
-  puts "[tari-brand] Could not disable dark mode switching: #{e.class} #{e.message}"
 end
 
 # -----------------------------------------------------------------------------
