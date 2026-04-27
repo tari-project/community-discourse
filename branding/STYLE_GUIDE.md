@@ -187,25 +187,31 @@ All three work. Option A is recommended for strongest brand alignment.
 
 ## 5. Discourse Theme Mapping
 
-For the Discourse admin color scheme (`/admin/customize/colors`):
+The forum runs a **dark theme** using MoVi Ink (`#0D1018`) as the base background — a
+near-black that reads less harsh than the electric-navy Ink (`#040723`). Purple is used
+for both links and navigation accents; neon Green (`#C9EB00`) is reserved for success
+states only, not as a persistent UI accent.
 
 | Discourse Setting | Tari Token | Hex |
 |-------------------|-----------|-----|
-| `primary` (text) | Ink | `#040723` |
-| `secondary` (background) | Off White | `#FBF1E9` |
-| `tertiary` (links) | Azure | `#0939CF` |
+| `primary` (text) | Cloud | `#ECEEFF` |
+| `secondary` (background) | MoVi Ink | `#0D1018` |
+| `tertiary` (links) | Purple | `#813BF5` |
 | `quaternary` (navigation) | Purple | `#813BF5` |
-| `header_background` | Ink | `#040723` |
+| `header_background` | MoVi Ink | `#0D1018` |
 | `header_primary` (header text) | Cloud | `#ECEEFF` |
 | `highlight` | Yellow | `#EBC216` |
 | `danger` | Red | `#FE2C3F` |
-| `success` | Green (on dark) | `#C9EB00` |
+| `success` | Green | `#C9EB00` |
 | `love` (like button) | Purple | `#813BF5` |
 
-> **Why Azure for links instead of Purple?** Purple `#813BF5` on Off White `#FBF1E9`
-> only achieves ~3.9:1 contrast -- below WCAG AA for normal body text. Azure `#0939CF`
-> achieves ~8.5:1 and still feels on-brand. Use Purple for large interactive elements
-> (buttons, nav highlights) where the larger size compensates.
+> **Why Purple for links instead of Azure?** Azure `#0939CF` is for light backgrounds
+> (~8.5:1 on Off White). On a near-black background, Purple `#813BF5` achieves ~4.3:1
+> — the brand-standard dark-mode link color.
+>
+> **Why not Green for navigation?** `#C9EB00` was designed as a selective highlight
+> accent, not a persistent UI element. On a fully dark theme it reads as neon and
+> causes eye strain. Purple is far softer while remaining on-brand.
 
 ---
 

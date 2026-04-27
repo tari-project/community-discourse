@@ -70,10 +70,10 @@ puts '[tari-brand] Configuring Tari color scheme...'
 
 TARI_COLORS = {
   'primary'           => 'ECEEFF',  # Cloud — text (light on dark bg)
-  'secondary'         => '040723',  # Ink — page background (dark)
+  'secondary'         => '0D1018',  # MoVi Ink — page background (near-black, softer than navy)
   'tertiary'          => '813BF5',  # Purple — links (good contrast on dark)
-  'quaternary'        => 'C9EB00',  # Green — navigation accent
-  'header_background' => '040723',  # Ink — dark header
+  'quaternary'        => '813BF5',  # Purple — navigation accent (softer than neon green)
+  'header_background' => '0D1018',  # MoVi Ink — dark header
   'header_primary'    => 'ECEEFF',  # Cloud — header text
   'highlight'         => 'EBC216',  # Yellow — highlights
   'danger'            => 'FE2C3F',  # Red — danger/alerts
