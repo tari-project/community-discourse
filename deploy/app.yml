@@ -10,10 +10,6 @@
 ## commit, pull on the host, and run `./launcher rebuild app`.
 ## =============================================================================
 
-## Discourse release to pin. Set DISCOURSE_VERSION in .env (default: stable).
-## Bump this value deliberately during scheduled upgrade windows.
-version: "${DISCOURSE_VERSION}"
-
 templates:
   - "templates/postgres.template.yml"
   - "templates/redis.template.yml"
@@ -30,6 +26,14 @@ expose:
   - "443:443"
 
 params:
+  ## Discourse release channel. Set DISCOURSE_VERSION in .env.
+  ## This forum tracks "latest" (a.k.a. tests-passed) — the Discourse default:
+  ## prompt feature + security updates. Set to "stable" instead for infrequent,
+  ## major-release-only updates (fewer prompts, but slower security patches).
+  ## NOTE: this MUST live under params: — a top-level `version:` key is silently
+  ## ignored by discourse_docker (which is why an earlier "stable" pin never took
+  ## effect and the forum ran "latest" all along).
+  version: "${DISCOURSE_VERSION}"
   db_default_text_search_config: "pg_catalog.english"
   ## Tuned for a 4 vCPU / 16 GB host. Override in .env via DB_SHARED_BUFFERS.
   db_shared_buffers: "${DB_SHARED_BUFFERS}"
