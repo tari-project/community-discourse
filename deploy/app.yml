@@ -112,15 +112,18 @@ run:
   ## Make sure crontab inside the container runs the nightly backup.
   - exec: rails r "SiteSetting.backup_frequency = 1"
   - exec: rails r "SiteSetting.maximum_backups = ${BACKUP_RETENTION_DAYS}"
-  ## Apply branding (logos, fonts, site settings) — needs full stack running
+  ## Apply branding (logos, fonts, site settings) — first boot only
   - exec:
       cd: $home
       cmd:
         - |
-          if [ -f /shared/tari-seed/seed-branding.rb ]; then
+          if [ -f /shared/tari-seed/.branded ]; then
+            echo "[tari] Branding already applied — skipping (delete /shared/tari-seed/.branded to re-run)."
+          elif [ -f /shared/tari-seed/seed-branding.rb ]; then
             echo "[tari] Applying branding at runtime..."
             chown -R discourse:www-data /shared/tari-seed/ 2>/dev/null || true
             chmod -R a+r /shared/tari-seed/ 2>/dev/null || true
             rails runner /shared/tari-seed/seed-branding.rb || echo "[tari] branding seeder had errors (non-fatal)"
+            touch /shared/tari-seed/.branded
           fi
   - exec: echo "End of custom commands"
