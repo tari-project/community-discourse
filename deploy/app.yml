@@ -123,7 +123,10 @@ run:
             echo "[tari] Applying branding at runtime..."
             chown -R discourse:www-data /shared/tari-seed/ 2>/dev/null || true
             chmod -R a+r /shared/tari-seed/ 2>/dev/null || true
-            rails runner /shared/tari-seed/seed-branding.rb || echo "[tari] branding seeder had errors (non-fatal)"
-            touch /shared/tari-seed/.branded
+            if rails runner /shared/tari-seed/seed-branding.rb; then
+              touch /shared/tari-seed/.branded
+            else
+              echo "[tari] branding seeder had errors (non-fatal) — will retry on next boot"
+            fi
           fi
   - exec: echo "End of custom commands"
