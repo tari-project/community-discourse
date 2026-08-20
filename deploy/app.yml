@@ -88,6 +88,13 @@ hooks:
           - git clone --depth 1 https://github.com/discourse/docker_manager.git
           ## GitHub SSO login button — only active once GITHUB_CLIENT_ID is set.
           - git clone --depth 1 https://github.com/discourse/discourse-github-oauth2.git || true
+          ## Post/topic translation. Inert until an admin sets `translator_enabled`,
+          ## picks a `translator` backend (Microsoft / Google / AWS / Yandex /
+          ## LibreTranslate) and supplies that backend's API credentials in
+          ## Settings → Plugins. Credentials live in SiteSettings, not .env.
+          ## NOTE: language detection runs once per post and bills against the
+          ## chosen provider — review cost before enabling on the live forum.
+          - git clone --depth 1 https://github.com/discourse/discourse-translator.git
 
   ## Run category seeder on first boot only. Idempotent — safe to re-run.
   after_bundle_exec:

@@ -69,6 +69,28 @@ rebuilds between scheduled upgrade windows.
 Avoid pinning plugins to `master` — pin to a tag, or at least a commit, so
 that rebuilds are reproducible.
 
+### Configure the translator plugin
+
+`discourse-translator` ships in `deploy/app.yml` but does nothing until it is
+configured. After a rebuild, in **Admin → Settings → Plugins**:
+
+1. Set `translator` to a backend: Microsoft, Google, AWS, Yandex, or
+   LibreTranslate (LibreTranslate can be self-hosted, so no per-call billing).
+2. Fill in that backend's API credentials. These are stored in SiteSettings,
+   not in `.env` — same pattern as the S3 backup and GitHub SSO credentials.
+3. Enable `allow_user_locale` in **Admin → Settings → Basic Setup**. The
+   plugin needs it to know each user's target language.
+4. Tick `translator_enabled` last.
+
+`max_translations_per_minute` (default 3) caps per-user request rate. Access
+can be restricted to specific groups if translation should not be open to
+anonymous readers.
+
+Cost warning: language detection runs once per post and is billed by the
+chosen provider. Enabling this on a forum with existing history will detect
+across the backlog. Check provider pricing before ticking `translator_enabled`
+in production.
+
 ### Reset an admin password
 
 ```bash
