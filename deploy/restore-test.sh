@@ -27,6 +27,7 @@ set -euo pipefail
 DISCOURSE_DIR="/var/discourse"
 BACKUP_DIR="${DISCOURSE_DIR}/shared/standalone/backups/default"
 TEST_CONTAINER="app-restore-test"
+TEST_YML="${DISCOURSE_DIR}/containers/${TEST_CONTAINER}.yml"
 SCRATCH_SHARED="${DISCOURSE_DIR}/shared/restore-test"
 LOG_TAG="[tari-restore-test]"
 
@@ -40,6 +41,7 @@ cleanup() {
     docker rm   "${TEST_CONTAINER}" >/dev/null 2>&1 || true
   fi
   rm -rf "${SCRATCH_SHARED}"
+  rm -f "${TEST_YML}"
 }
 trap cleanup EXIT
 
@@ -62,7 +64,6 @@ log "using backup: $(basename "${LATEST}")"
 mkdir -p "${SCRATCH_SHARED}/backups/default"
 cp "${LATEST}" "${SCRATCH_SHARED}/backups/default/"
 
-TEST_YML="${DISCOURSE_DIR}/containers/${TEST_CONTAINER}.yml"
 # Clone the prod app.yml but swap the shared volume mount + hostname + ports
 # so nothing collides with production.
 sed \
@@ -88,7 +89,7 @@ if ! docker exec "${TEST_CONTAINER}" bash -lc "
   export DISCOURSE_ENABLE_RESTORE=1
   cd /var/www/discourse
   sudo -u discourse bundle exec discourse enable_restore
-  sudo -u discourse bundle exec discourse restore ${BACKUP_BASENAME}
+  sudo -u discourse bundle exec discourse restore \"${BACKUP_BASENAME}\"
 "; then
   die "restore command failed — see container logs" 2
 fi

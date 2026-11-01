@@ -31,11 +31,10 @@ DISCOURSE_DIR="/var/discourse"
 cd "${DISCOURSE_DIR}"
 
 echo "[tari-rotate] invalidating existing sessions for ${EMAIL}..."
-# Pass EMAIL as an environment variable and use a single-quoted heredoc so
-# the shell never interpolates ${EMAIL} inside the Ruby script — avoiding
-# injection if the address contains Ruby-significant characters.
-EMAIL="${EMAIL}" ./launcher enter app <<'RUBY'
-bin/rails runner '
+# Pass EMAIL into the container via docker exec -e and read the Ruby script
+# from stdin so the shell never interpolates ${EMAIL} inside Ruby code.
+docker exec -i -e EMAIL="${EMAIL}" app \
+  bash -lc 'cd /var/www/discourse && sudo -E -u discourse bundle exec rails runner -' <<'RUBY'
   email = ENV["EMAIL"]
   user = User.find_by_email(email)
   if user.nil?
@@ -49,5 +48,4 @@ bin/rails runner '
   token = EmailToken.enqueue_email_token(user, :password_reset)
   puts "[tari-rotate] reset URL: #{Discourse.base_url}/u/password-reset/#{token.token}"
   puts "[tari-rotate] (also emailed to #{email})"
-'
 RUBY

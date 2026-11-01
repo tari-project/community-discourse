@@ -218,6 +218,14 @@ bootstrap_or_rebuild() {
 # -----------------------------------------------------------------------------
 install_backup_cron() {
   log "Installing nightly backup cron..."
+  cat > /etc/tari-discourse.env <<EOF
+BACKUP_RETENTION_DAYS=${BACKUP_RETENTION_DAYS}
+S3_BACKUP_BUCKET=${S3_BACKUP_BUCKET:-}
+S3_ACCESS_KEY_ID=${S3_ACCESS_KEY_ID:-}
+S3_SECRET_ACCESS_KEY=${S3_SECRET_ACCESS_KEY:-}
+S3_REGION=${S3_REGION:-}
+EOF
+  chmod 600 /etc/tari-discourse.env
   install -m 0755 "${REPO_DIR}/scripts/nightly-backup.sh" /usr/local/sbin/tari-nightly-backup.sh
   cat > /etc/cron.d/tari-discourse-backup <<EOF
 # Tari Discourse — nightly backup (03:17 UTC, offset from the crowd)
@@ -234,9 +242,10 @@ create_bootstrap_admin() {
   # We capture the exit code rather than using `|| true` so a genuine failure
   # (e.g. the container not running, the database not ready) is surfaced as a
   # warning instead of being silently swallowed and reported as success.
-  if ! ADMIN_EMAIL="${ADMIN_EMAIL}" ADMIN_USERNAME="${ADMIN_USERNAME:-tari_admin}" \
-       "${DISCOURSE_DIR}/launcher" enter app <<'RUBY'
-bin/rails runner '
+  if ! docker exec -i \
+       -e ADMIN_EMAIL="${ADMIN_EMAIL}" \
+       -e ADMIN_USERNAME="${ADMIN_USERNAME:-tari_admin}" \
+       app bash -lc 'cd /var/www/discourse && sudo -E -u discourse bundle exec rails runner -' <<'RUBY'
   email    = ENV["ADMIN_EMAIL"]    || "admin@tari.com"
   username = ENV["ADMIN_USERNAME"] || "tari_admin"
   user = User.find_by_email(email) || User.create!(
@@ -250,7 +259,6 @@ bin/rails runner '
   user.update!(admin: true, moderator: true)
   user.activate
   puts "[tari] Admin account ready: #{user.username} <#{user.email}>"
-'
 RUBY
   then
     warn "Bootstrap admin creation failed — the container may still be starting."

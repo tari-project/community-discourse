@@ -61,9 +61,9 @@ if [[ -n "${S3_BACKUP_BUCKET:-}" ]]; then
   fi
   KEY="discourse/nightly/$(basename "${LATEST}")"
   log "uploading $(basename "${LATEST}") to s3://${S3_BACKUP_BUCKET}/${KEY}"
-  AWS_ACCESS_KEY_ID="${S3_ACCESS_KEY_ID}" \
-  AWS_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY}" \
-  AWS_DEFAULT_REGION="${S3_REGION}" \
+  AWS_ACCESS_KEY_ID="${S3_ACCESS_KEY_ID:-}" \
+  AWS_SECRET_ACCESS_KEY="${S3_SECRET_ACCESS_KEY:-}" \
+  AWS_DEFAULT_REGION="${S3_REGION:-}" \
     aws s3 cp "${LATEST}" "s3://${S3_BACKUP_BUCKET}/${KEY}" \
       --storage-class STANDARD_IA
   log "offsite upload complete"
